@@ -2,6 +2,7 @@
 #pragma once
 
 #include <gtk/gtk.h>
+#include <stdbool.h>
 
 G_BEGIN_DECLS
 
@@ -23,6 +24,8 @@ struct fpRefStrings {
   char* suggestRemoteName;
   char* gpgKey;
   char* runtimeRepo;
+  bool app;
+  char* type;
 };
 
 G_END_DECLS

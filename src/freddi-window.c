@@ -1,6 +1,19 @@
+#ifndef ARCH
+
+#if defined  ( __amd64__) || defined  (__amd64) || defined  (__x86_64__) || defined  (__x86_64)
+#define ARCH "x86_64"
+#endif
+
+#if defined  (i386) || defined  (__i386) || defined  (__i386__)
+#define ARCH "i386"
+#endif
+
+#endif
 
 #include "freddi-config.h"
 #include "freddi-window.h"
+
+#include <flatpak.h>
 
 struct _FreddiWindow
 {
@@ -146,7 +159,18 @@ open_file_complete (GObject                *source_object,
       if(strcmp(token, "Name") == 0) fprs.name = strtok(NULL, equals);
       else if(strcmp(token, "Branch") == 0) fprs.branch = strtok(NULL, equals);
       else if(strcmp(token, "Title") == 0) fprs.title = strtok(NULL, equals);
-      else if(strcmp(token, "IsRuntime") == 0) fprs.isRuntime = strtok(NULL, equals);
+      else if(strcmp(token, "IsRuntime") == 0) {
+        fprs.isRuntime = strtok(NULL, equals);
+
+        if (strcmp(fprs.isRuntime, "false") == 0) {
+          fprs.app = true;
+          fprs.type = "app";
+        }
+        else {
+          fprs.app = false;
+          fprs.type = "runtime";
+        }
+      }
       else if(strcmp(token, "Url") == 0) fprs.url = strtok(NULL, equals);
       else if(strcmp(token, "SuggestRemoteName") == 0) fprs.suggestRemoteName = strtok(NULL, equals);
       else if(strcmp(token, "GPGKey") == 0) fprs.gpgKey = strtok(NULL, equals);
@@ -165,7 +189,20 @@ open_file_complete (GObject                *source_object,
          fprs.gpgKey,
          fprs.runtimeRepo);
 
-  puts(details);
+  GError *err = NULL;
+  char ref[256];
+  sprintf(ref, "%s/%s/%s/%s", fprs.type, fprs.name, ARCH, fprs.branch);
+  FlatpakRef * fpref = flatpak_ref_parse(ref, err);
+
+  if (err != NULL) {
+    g_assert (fpref == NULL);
+    puts("Can't find the app.");
+  }
+  else {
+    g_assert (fpref != NULL);
+    const char * refname = flatpak_ref_get_name(fpref);
+    printf("App name: %s\n", refname);
+  }
 
   // TODO  Remove the text view and put each relevant field into a nice pair of labels.
   gtk_text_buffer_set_text (buffer, details, strlen(details));
