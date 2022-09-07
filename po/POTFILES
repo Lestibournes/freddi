@@ -1,0 +1,7 @@
+data/com.example.Freddi.desktop.in
+data/com.example.Freddi.appdata.xml.in
+data/com.example.Freddi.gschema.xml
+src/freddi-window.ui
+src/main.c
+src/freddi-window.c
+
