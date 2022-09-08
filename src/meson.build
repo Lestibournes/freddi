@@ -7,6 +7,8 @@ freddi_sources = [
 freddi_deps = [
   dependency('libadwaita-1', version: '>= 1.0'),
   dependency('flatpak'),
+	dependency('packagekit-glib2'),
+	dependency('appstream'),
 ]
 
 gnome = import('gnome')

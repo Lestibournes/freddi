@@ -1,59 +1,114 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk" version="4.0"/>
-  <template class="FreddiWindow" parent="GtkApplicationWindow">
-    <property name="default-width">600</property>
-    <property name="default-height">300</property>
-    <property name="title">Freddi</property>
-    <style>
-      <class name="devel"/>
-    </style>
-    <child type="titlebar">
-      <object class="GtkHeaderBar" id="header_bar">
-        <child type="end">
-          <object class="GtkMenuButton">
-            <property name="icon-name">open-menu-symbolic</property>
-            <property name="menu-model">primary_menu</property>
+	<requires lib="gtk" version="4.0"/>
+	<template class="FreddiWindow" parent="GtkApplicationWindow">
+		<property name="default-width">600</property>
+		<property name="default-height">300</property>
+		<property name="title">Freddi</property>
+		<style>
+			<class name="devel"/>
+		</style>
+		<child type="titlebar">
+			<object class="GtkHeaderBar" id="header_bar">
+				<child type="end">
+					<object class="GtkMenuButton">
+						<property name="icon-name">open-menu-symbolic</property>
+						<property name="menu-model">primary_menu</property>
+					</object>
+				</child>
+				<child type="end">
+					<object class="GtkButton" id="install_button">
+						<property name="label">Install</property>
+					</object>
+				</child>
+			</object>
+		</child>
+		<child>
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkBox">
+            <child>
+              <object class="GtkImage" id="app_icon">
+                <property name="icon-name">missing-image</property>
+                <property name="icon_size">6</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkLabel" id="app_name">
+                    <property name="label" translatable="yes">&lt;Name&gt;</property>
+                    <attributes>
+                      <attribute name="weight" value="bold"/>
+                    </attributes>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="app_developer">
+                    <property name="label" translatable="yes">&lt;Developer&gt;</property>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
         </child>
-        <child type="end">
-          <object class="GtkButton" id="install_button">
-            <property name="label">Install</property>
+        <child>
+          <object class="GtkLabel" id="app_summary">
+            <property name="label" translatable="yes">&lt;Summary&gt;</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="app_description">
+            <property name="label" translatable="yes">&lt;Description&gt;</property>
+          </object>
+        </child>
+        <child>
+          <!-- n-columns=2 n-rows=2 -->
+          <object class="GtkGrid">
+            <property name="row-homogeneous">True</property>
+            <property name="column-homogeneous">True</property>
+            <child>
+              <object class="GtkLabel" id="app_id">
+                <property name="label" translatable="yes">&lt;Id&gt;</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="app_license">
+                <property name="label" translatable="yes">&lt;License&gt;</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="app_origin">
+                <property name="label" translatable="yes">&lt;Origin&gt;</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="app_branch">
+                <property name="label" translatable="yes">&lt;Branch&gt;</property>
+              </object>
+            </child>
           </object>
         </child>
       </object>
     </child>
-    <child>
-      <object class="GtkScrolledWindow">
-        <property name="hexpand">true</property>
-        <property name="vexpand">true</property>
-        <property name="margin-top">6</property>
-        <property name="margin-bottom">6</property>
-        <property name="margin-start">6</property>
-        <property name="margin-end">6</property>
-        <property name="child">
-          <object class="GtkTextView" id="main_text_view">
-            <property name="monospace">true</property>
-          </object>
-        </property>
-      </object>
-    </child>
-  </template>
+	</template>
 
-  <menu id="primary_menu">
-    <section>
-      <item>
-        <attribute name="label" translatable="yes">_Preferences</attribute>
-        <attribute name="action">app.preferences</attribute>
-      </item>
-      <item>
-        <attribute name="label" translatable="yes">_Keyboard Shortcuts</attribute>
-        <attribute name="action">win.show-help-overlay</attribute>
-      </item>
-      <item>
-        <attribute name="label" translatable="yes">_About Freddi</attribute>
-        <attribute name="action">app.about</attribute>
-      </item>
-    </section>
-  </menu>
+	<menu id="primary_menu">
+		<section>
+			<item>
+				<attribute name="label" translatable="yes">_Preferences</attribute>
+				<attribute name="action">app.preferences</attribute>
+			</item>
+			<item>
+				<attribute name="label" translatable="yes">_Keyboard Shortcuts</attribute>
+				<attribute name="action">win.show-help-overlay</attribute>
+			</item>
+			<item>
+				<attribute name="label" translatable="yes">_About Freddi</attribute>
+				<attribute name="action">app.about</attribute>
+			</item>
+		</section>
+	</menu>
 </interface>
