@@ -10,11 +10,17 @@
       <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
+        <property name="margin-start">32</property>
+        <property name="margin-end">32</property>
+        <property name="margin-top">32</property>
+        <property name="margin-bottom">32</property>
         <property name="orientation">vertical</property>
+        <property name="spacing">15</property>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="spacing">15</property>
             <child>
               <object class="GtkImage" id="app_icon">
                 <property name="visible">True</property>
@@ -33,6 +39,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
+                <property name="spacing">15</property>
                 <child>
                   <object class="GtkLabel" id="app_name">
                     <property name="visible">True</property>
@@ -40,6 +47,7 @@
                     <property name="label" translatable="yes">&lt;Name&gt;</property>
                     <attributes>
                       <attribute name="weight" value="bold"/>
+                      <attribute name="size" value="24"/>
                     </attributes>
                   </object>
                   <packing>
@@ -103,6 +111,8 @@
           <object class="GtkGrid">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="row-spacing">15</property>
+            <property name="column-spacing">15</property>
             <property name="row-homogeneous">True</property>
             <property name="column-homogeneous">True</property>
             <child>

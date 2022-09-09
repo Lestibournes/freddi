@@ -6,9 +6,7 @@
                 "${workspaceFolder}/**",
                 "/usr/include/**",
                 "/usr/lib/x86_64-linux-gnu/**",
-                "/usr/include/PackageKit/packagekit-glib2",
-                "/usr/include/appstream",
-                "/usr/include/PackageKit"
+                "/usr/include/appstream"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

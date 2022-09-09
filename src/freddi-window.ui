@@ -19,6 +19,8 @@
 				<child type="end">
 					<object class="GtkButton" id="install_button">
 						<property name="label">Install</property>
+						<property name="sensitive">false</property>
+						<property name="action-name">win.install</property>
 					</object>
 				</child>
 			</object>
@@ -26,22 +28,31 @@
 		<child>
       <object class="GtkBox">
         <property name="orientation">vertical</property>
+				<property name="spacing">32</property>
+				<property name="margin-start">32</property>
+				<property name="margin-end">32</property>
+				<property name="margin-top">32</property>
+				<property name="margin-bottom">32</property>
+
         <child>
           <object class="GtkBox">
+					<property name="spacing">32</property>
             <child>
               <object class="GtkImage" id="app_icon">
                 <property name="icon-name">missing-image</property>
-                <property name="icon_size">6</property>
+                <property name="pixel_size">128</property>
               </object>
             </child>
             <child>
               <object class="GtkBox">
                 <property name="orientation">vertical</property>
+								<property name="spacing">32</property>
                 <child>
                   <object class="GtkLabel" id="app_name">
                     <property name="label" translatable="yes">&lt;Name&gt;</property>
                     <attributes>
                       <attribute name="weight" value="bold"/>
+											<attribute name="size" value="18432"/>
                     </attributes>
                   </object>
                 </child>
@@ -67,6 +78,8 @@
         <child>
           <!-- n-columns=2 n-rows=2 -->
           <object class="GtkGrid">
+						<property name="row-spacing">32</property>
+            <property name="column-spacing">32</property>
             <property name="row-homogeneous">True</property>
             <property name="column-homogeneous">True</property>
             <child>

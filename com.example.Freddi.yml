@@ -1,0 +1,13 @@
+app-id: com.example.Freddi
+runtime: org.gnome.Sdk/x86_64
+sdk: org.gnome.Sdk
+command: freddi
+modules:
+  - name: freddi
+    buildsystem: simple
+    build-commands:
+      - install -D freddi /app/bin/freddi
+    sources:
+      - type: file
+        path: build/src/freddi
+

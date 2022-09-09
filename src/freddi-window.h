@@ -15,8 +15,9 @@ open_file_complete (GObject                *source_object,
                     GAsyncResult           *result,
                     FreddiWindow *self);
 
-struct fpRefStrings {
-  char* name;
+struct _appData {
+	// Flatpak data:
+  char* id;
   char* branch;
   char* title;
   char* isRuntime;
@@ -26,6 +27,8 @@ struct fpRefStrings {
   char* runtimeRepo;
   bool app;
   char* type;
+
+	// AppStream data:
 };
 
 G_END_DECLS

@@ -1,0 +1,5 @@
+[Runtime]
+name=com.example.Freddi.Debug
+
+[ExtensionOf]
+ref=app/com.example.Freddi/x86_64/master

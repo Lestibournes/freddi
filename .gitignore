@@ -1,2 +1,4 @@
 build
-com.example.Freddi.json
+com.example.Freddi.json*
+src/freddi-window2.ui~
+src/freddi-window.glade~

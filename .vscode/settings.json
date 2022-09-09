@@ -3,6 +3,7 @@
 		"freddi-config.h": "c",
 		"freddi-window.h": "c",
 		"packagekit.h": "c",
-		"as-version.h": "c"
+		"as-version.h": "c",
+		"flatpak.h": "c"
 	}
 }

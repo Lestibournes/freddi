@@ -1,0 +1,4 @@
+[Application]
+name=com.example.Freddi
+runtime=org.gnome.Sdk/x86_64/master
+sdk=org.gnome.Sdk/x86_64/master

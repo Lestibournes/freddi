@@ -1,0 +1,23 @@
+{
+  "id" : "com.example.Freddi",
+  "runtime" : "org.gnome.Sdk/x86_64",
+  "runtime-commit" : "089a6a3716d82213987b76ccd292258e2db9fa5fd014f458984ae1a132f9fed8",
+  "sdk" : "org.gnome.Sdk",
+  "sdk-commit" : "089a6a3716d82213987b76ccd292258e2db9fa5fd014f458984ae1a132f9fed8",
+  "command" : "freddi",
+  "modules" : [
+    {
+      "name" : "freddi",
+      "buildsystem" : "simple",
+      "sources" : [
+        {
+          "path" : "build/src/freddi",
+          "type" : "file"
+        }
+      ],
+      "build-commands" : [
+        "install -D freddi /app/bin/freddi"
+      ]
+    }
+  ]
+}
