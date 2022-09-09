@@ -44,10 +44,11 @@
                   <object class="GtkLabel" id="app_name">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="hexpand">True</property>
                     <property name="label" translatable="yes">&lt;Name&gt;</property>
                     <attributes>
-                      <attribute name="weight" value="bold"/>
-                      <attribute name="size" value="24"/>
+                      <attribute name="font-desc" value="Sans Bold 18"/>
                     </attributes>
                   </object>
                   <packing>
@@ -60,7 +61,12 @@
                   <object class="GtkLabel" id="app_developer">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="halign">start</property>
                     <property name="label" translatable="yes">&lt;Developer&gt;</property>
+                    <attributes>
+                      <attribute name="weight" value="light"/>
+                      <attribute name="size" value="18432"/>
+                    </attributes>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -86,6 +92,7 @@
           <object class="GtkLabel" id="app_summary">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="halign">start</property>
             <property name="label" translatable="yes">&lt;Summary&gt;</property>
           </object>
           <packing>
@@ -98,6 +105,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="halign">start</property>
             <property name="label" translatable="yes">&lt;Description&gt;</property>
           </object>
           <packing>

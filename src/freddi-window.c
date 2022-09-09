@@ -12,6 +12,7 @@
 
 #include <flatpak.h>
 #include <appstream/appstream.h>
+#include <regex.h>
 
 #include "freddi-config.h"
 #include "freddi-window.h"
@@ -259,6 +260,33 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 		if (summary != NULL) gtk_label_set_label(self->app_summary, summary);
 
 		if (description != NULL) {
+			// TODO Strip HTML tags from the description. In particular, the <p></p> tags.
+			regex_t pattern;
+			size_t nmatch = 100;
+			regmatch_t pmatch[nmatch];
+
+			int status = regcomp(&pattern, "<p>", REG_EXTENDED);
+			if (status == 0) {
+				status = regexec(&pattern, description, nmatch, pmatch, 0);
+
+				if (status == 0) {
+					for (int i = 0; i < nmatch; i++) {
+						if (pmatch[i].rm_so > -1) {
+							int length = pmatch[i].rm_eo - pmatch[i].rm_so;
+							char match[length + 1];
+							strncpy(&match, description, length);
+							match[length + 1] = '\0';
+
+							printf("%s:%c\n",match, description[pmatch[i].rm_eo]);
+
+							// TODO move the rest over to rm_so so at to erase the matching string.
+							int l = strlen(description) - length;
+
+						}
+					}
+				}
+			}
+			
 			gtk_label_set_label(self->app_description, description);
 			gtk_label_set_wrap(self->app_description, true);
 		}

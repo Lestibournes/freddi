@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "/usr/include/**",
                 "/usr/lib/x86_64-linux-gnu/**",
-                "/usr/include/appstream"
+                "/usr/include/appstream",
+								"/usr/include/flatpak"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
