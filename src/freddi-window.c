@@ -19,6 +19,232 @@
 
 struct _appData appData;
 
+int regSearch(char * source, char * regexString, size_t maxMatches, size_t maxGroups) {
+	regex_t regexCompiled;
+	regmatch_t groupArray[maxGroups];
+
+	if (regcomp(&regexCompiled, regexString, REG_EXTENDED)) {
+		printf("Could not compile regular expression.\n");
+		return 1;
+	};
+
+	// Points to the beginning of the search for each match.
+	char * cursor = source;
+
+	for (unsigned int m = 0; m < maxMatches; m ++) {
+		// Goes over all the matches until maxMatches.
+		// Breaks early if it finds no more matches.
+		if (regexec(&regexCompiled, cursor, maxGroups, groupArray, 0)) break;
+
+		for (unsigned int g = 0; g < maxGroups; g++) {
+			// Goes over all the groups in the match until maxGroups.
+			// Breaks early if the current group doesn't exist.
+			if (groupArray[g].rm_so == (size_t)-1) break;
+
+			// Copy of the source string starting from cursor and all the way to the end,
+			// but with a null characater placed at the end of each group.
+			char cursorCopy[strlen(cursor) + 1];
+			strcpy(cursorCopy, cursor);
+			cursorCopy[groupArray[g].rm_eo] = 0;
+
+			printf("Match %u, Group %u: [%2u-%2u]: %s\n",
+							m, g, groupArray[g].rm_so, groupArray[g].rm_eo,
+							cursorCopy + groupArray[g].rm_so);
+		}
+
+		cursor += groupArray[0].rm_eo + 1;
+	}
+
+	regfree(&regexCompiled);
+
+	return 0;
+}
+
+/**
+ * Requires two passes to remove both opening and closing tags.
+ * @param source the source string. Will not be modified.
+ * @param maxMatches how many tags to search for.
+ * @param exceptions allowed HTML tag names.
+ * @param n_exceptions number of allowed HTML tags.
+ * @return the sanitized string, or NULL if the regex could not be compiled.
+ */
+char* removeTags(char * source, char * pattern, size_t maxMatches, char** exceptions, int n_exceptions) {
+	regex_t compiled;
+	const size_t maxGroups = 2;
+	regmatch_t groupArray[maxGroups];
+	regmatch_t nextMatch[maxGroups];
+
+	// The size of the source string in bytes
+	int size = strlen(source) * sizeof(char) + 1;
+
+	// The result string
+	char* buffer = calloc(strlen(source) + 1, sizeof(char));
+
+	// Where to place the next sanitized string in the buffer.
+	int offset = 0;
+
+	if (regcomp(&compiled, pattern, REG_EXTENDED)) return NULL;
+
+	// Points to the beginning of the search for each match.
+	char* cursor = source;
+	char* nextCursor = source;
+
+	printf("%s\n", cursor);
+
+/*
+<p>This basic image editor can resize, crop, or rotate an image, apply simple filters, insert or censor text, and manipulate a selected portion of the picture (cut/copy/paste/drag/…)</p>
+<p>And of course, you can draw! Using tools such as the pencil, the straight line, the curve tool, many shapes, several brushes, and their various colors and options.</p>
+<p>Supported file types include PNG, JPEG and BMP.</p>
+*/
+
+	for (unsigned int m = 0; m < maxMatches; m ++) {
+		// Goes over all the matches until maxMatches.
+		// Breaks early if it finds no more matches.
+		if (regexec(&compiled, cursor, maxGroups, groupArray, 0)) break;
+		
+		// Check if the current tag is one of the allowed tags.
+		bool isAllowed = false;
+
+		int tagLength = groupArray[1].rm_eo - groupArray[1].rm_so;
+		char tagName[tagLength + 1];
+		strncpy(tagName, cursor + groupArray[1].rm_so, tagLength);
+		tagName[tagLength] = 0;
+		
+		for (int i = 0; i < n_exceptions; i++) {
+			if (strcmp(exceptions[i], tagName) == 0) {
+				isAllowed = true;
+				break;
+			}
+		}
+
+		// The length of the text between the current tag and the next one.
+		int length;
+		nextCursor = cursor + groupArray[0].rm_eo;
+
+		printf(
+			"Match end:\t%d\n"
+			"Cursor length:\t%d\n\n"
+			, groupArray[0].rm_eo
+			, strlen(cursor)
+		);
+
+		printf(
+			"Current cursor:\t%p\n"
+			"Next cursor:\t%p\n\n"
+			, cursor
+			, nextCursor
+		);
+
+		bool nextExists = regexec(&compiled, nextCursor, maxGroups, nextMatch, 0) == 0;
+		printf("Next exists:\t%s\n\n", nextExists ? "Yes" : "No");
+
+		printf(
+			"Current start:\t%d\n"
+			"Current end:\t%d\n\n"
+		, groupArray[0].rm_so
+		, groupArray[0].rm_eo
+		);
+
+		if (groupArray[0].rm_eo < (strlen(cursor)) && nextExists) {
+			printf(
+				"Next start:\t%d\n"
+				"Next end:\t%d\n\n"
+			, nextMatch[0].rm_so
+			, nextMatch[0].rm_eo
+			);
+
+			if (isAllowed) length = nextMatch[0].rm_so - groupArray[0].rm_so;
+			else length = nextMatch[0].rm_so - groupArray[0].rm_eo;
+		}
+		else {
+			if (isAllowed) length = strlen(cursor) - groupArray[0].rm_so;
+			else length = strlen(cursor) - groupArray[0].rm_eo;
+		}
+/*
+This basic image editor can resize, crop, or rotate an image, apply simple filters, insert or censor text, and manipulate a selected portion of the picture (cut/copy/paste/drag/…)
+
+And of course, you can draw! Using tools such as the pencil, the straight line, the curve tool, many shapes, several brushes, and their various colors and options.
+
+Supported file types include PNG, JPEG and BMP.
+*/
+		printf(
+			"Offset:\t\t%d\n"
+			"Tag length:\t%d\n"
+			"Text length:\t%d\n\n"
+			, offset
+			, groupArray[0].rm_eo - groupArray[0].rm_so
+			, length
+		);
+
+		memcpy(buffer + offset, cursor + (groupArray[0].rm_eo - groupArray[0].rm_so), length);
+
+		offset += length;
+		cursor += groupArray[0].rm_eo;
+	}
+
+	regfree(&compiled);
+
+	return buffer;
+}
+
+char* removeUnsupportedTags(char* src) {
+	char* supported_tags[] = {"markup", "span", "b", "big", "i", "s", "sub", "sup", "small", "tt", "u"};
+	const int supported_num = 11;
+
+	char* buffer = removeTags(src, "<(p)>", 100, supported_tags, supported_num);
+	printf("%s\n\n", buffer);
+	buffer = removeTags(buffer, "</(p)>", 100, supported_tags, supported_num);
+	printf("%s\n", buffer);
+	
+	return buffer;
+
+	// // The size of src in bytes (including null character)
+	// const int size = srtlen(src) * sizeof(char) + 1;
+
+	// char* buffer = malloc(size);
+	// memset(buffer, '\0', size);
+
+	// regex_t preg;
+	// size_t nmatch = 100;
+	// size_t ngroups = 2;
+	// regmatch_t pmatch[nmatch];
+
+	// int status = regcomp(&preg, pattern, REG_EXTENDED);
+
+	// if (status == 0) {
+	// 	status = regexec(&preg, src, nmatch, pmatch, 0);
+
+	// 	if (status == 0) {
+	// 		int offset = 0;
+
+	// 		for (int i = 0; i < nmatch; i++) {
+	// 			if (pmatch[i].rm_so > -1) {
+	// 				int match_length = pmatch[i].rm_eo - pmatch[i].rm_so;
+	// 				char match[match_length + 1];
+	// 				strncpy(&match, src, match_length);
+	// 				match[match_length + 1] = '\0';
+
+	// 				printf("%s:%c\n",match, src[pmatch[i].rm_eo]);
+
+	// 				bool is_supported = false;
+
+	// 				for (int j = 0; j < supported_num; j++) {
+	// 					if (strstr(src[pmatch[i].rm_so], supported_tags[j]) == src[pmatch[i].rm_so + 1]) {
+	// 						is_supported = true;
+	// 						break;
+	// 					}
+	// 				}
+
+	// 				int length = pmatch[i + 1].rm_so - pmatch[i].rm_eo + 1;
+
+	// 				memcpy(buffer + offset, src[pmatch[i].rm_eo + 1], length);
+	// 				offset += length; 
+	// 			}
+	// 		}
+	// 	}
+	// }
+}
+
 // This should be inlined, but I'm doing it this way to make it easier for me to read the code.
 char* getRef(char* type, char* name, char* arch, char* branch) {
 	int length = strlen(type) + strlen(name) + strlen(arch) + strlen(branch);
@@ -261,33 +487,31 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 
 		if (description != NULL) {
 			// TODO Strip HTML tags from the description. In particular, the <p></p> tags.
-			regex_t pattern;
-			size_t nmatch = 100;
-			regmatch_t pmatch[nmatch];
+			// printf("%s\n\n", description);
+			// char buffer = removeUnsupportedTags(description); //Overenginnered. I just need to get rid of <p>...</p>
 
-			int status = regcomp(&pattern, "<p>", REG_EXTENDED);
-			if (status == 0) {
-				status = regexec(&pattern, description, nmatch, pmatch, 0);
+			char* cursor = description;
+			char* start;
+			char* end;
+			char buffer[strlen(description + 1)];
+			int offset = 0;
+			int length;
 
-				if (status == 0) {
-					for (int i = 0; i < nmatch; i++) {
-						if (pmatch[i].rm_so > -1) {
-							int length = pmatch[i].rm_eo - pmatch[i].rm_so;
-							char match[length + 1];
-							strncpy(&match, description, length);
-							match[length + 1] = '\0';
+			while((start = strstr(cursor, "<p>")) != NULL) {
+				end = strstr(cursor, "</p>");
+				length = end - start - 3;
 
-							printf("%s:%c\n",match, description[pmatch[i].rm_eo]);
-
-							// TODO move the rest over to rm_so so at to erase the matching string.
-							int l = strlen(description) - length;
-
-						}
-					}
-				}
+				memcpy(buffer + offset, start + 3, length);
+				cursor = end + 4;
+				offset += length;
+				buffer[offset] = 0;
+				strcat(buffer, "\n\n");
+				offset += 2;
 			}
-			
-			gtk_label_set_label(self->app_description, description);
+
+			buffer[offset] = 0;
+
+			gtk_label_set_label(self->app_description, buffer);
 			gtk_label_set_wrap(self->app_description, true);
 		}
 
