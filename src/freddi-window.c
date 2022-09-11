@@ -85,20 +85,38 @@ static void text_viewer_window__install_app(GAction *action G_GNUC_UNUSED, GVari
 		printf("No package is selected.\n");
 		return;
 	}
-
-	// # Obtain the Flatpak application data from Flatpak
-	// TODO I don't need this here. It's redundant as I will only need it when during the install.
-	GError *err = NULL;
+	
+	GError* err = NULL;
 	char* ref = getRef(appData.type, appData.id, ARCH, appData.branch);
 	FlatpakRef * fpref = flatpak_ref_parse(ref, &err);
 
-	if (err != NULL) {
-		puts("Can't find the app."); // TODO put the error message in the GUI instead.
+	if (err == NULL) {
+		FlatpakInstallation* fpi = flatpak_installation_new_system(NULL, &err);
+
+		if (err == NULL) {
+			FlatpakTransaction* fpt = flatpak_transaction_new_for_installation(fpi, NULL, &err);
+
+			if (err == NULL) {
+				flatpak_transaction_add_install(fpt, appData.suggestRemoteName, ref, NULL, &err);
+
+				if (err == NULL) {
+					gboolean success = flatpak_transaction_run(fpt, NULL, &err);
+
+					if (err == NULL) {
+						printf("Installation success: %s\n", (success ? "Yes" : "No"));
+					}
+					else {
+						puts("Failed to install\n");
+					}
+				}
+			}
+		}
+		else {
+			puts("Failed to connect to Flatpak instance.\n");
+		}
 	}
 	else {
-		// # Obtain app metadata from AppStream in order to display it to the user prettily
-		const char * refname = flatpak_ref_get_name(fpref);
-
+		puts("Application/Runtime not found.\n"); // TODO put the error message in the GUI instead.
 	}
 }
 
@@ -319,8 +337,6 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 			gtk_label_set_label(self->app_origin, buffer);
 		}
 
-		// TODO Add more metadata from Flatpak, such as:
-		// download_size, installed_size, branch
 		GError* err = NULL;
 		char* ref = getRef(appData.type, appData.id, ARCH, appData.branch);
 		FlatpakRef * fpref = flatpak_ref_parse(ref, &err);
