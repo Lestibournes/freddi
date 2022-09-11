@@ -26,97 +26,177 @@
 			</object>
 		</child>
 		<child>
-      <object class="GtkBox">
-        <property name="orientation">vertical</property>
+			<object class="GtkBox">
+				<property name="orientation">vertical</property>
 				<property name="spacing">32</property>
 				<property name="margin-start">32</property>
 				<property name="margin-end">32</property>
 				<property name="margin-top">32</property>
 				<property name="margin-bottom">32</property>
 
-        <child>
-          <object class="GtkBox">
+				<child>
+					<object class="GtkBox">
 					<property name="spacing">32</property>
-            <child>
-              <object class="GtkImage" id="app_icon">
-                <property name="icon-name">missing-image</property>
-                <property name="pixel_size">128</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkBox">
-                <property name="orientation">vertical</property>
+						<child>
+							<object class="GtkImage" id="app_icon">
+								<property name="icon-name">missing-image</property>
+								<property name="pixel_size">128</property>
+							</object>
+						</child>
+						<child>
+							<object class="GtkBox">
+								<property name="orientation">vertical</property>
 								<property name="spacing">32</property>
-                <child>
-                  <object class="GtkLabel" id="app_name">
-                    <property name="label" translatable="yes">&lt;Name&gt;</property>
+								<child>
+									<object class="GtkLabel" id="app_name">
+										<property name="label" translatable="yes">&lt;Name&gt;</property>
 										<property name="halign">start</property>
-                    <attributes>
+										<attributes>
 											<attribute name="font-desc" value="Sans Bold 18"/>
-                    </attributes>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="app_developer">
-                    <property name="label" translatable="yes">&lt;Developer&gt;</property>
+										</attributes>
+									</object>
+								</child>
+								<child>
+									<object class="GtkLabel" id="app_developer">
+										<property name="label" translatable="yes">&lt;Developer&gt;</property>
 										<property name="halign">start</property>
 										<attributes>
 											<attribute name="font-desc" value="Sans Light 10"/>
-                    </attributes>
-                  </object>
-                </child>
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkLabel" id="app_summary">
-            <property name="label" translatable="yes">&lt;Summary&gt;</property>
+										</attributes>
+									</object>
+								</child>
+							</object>
+						</child>
+					</object>
+				</child>
+				<child>
+					<object class="GtkLabel" id="app_summary">
+						<property name="label" translatable="yes">&lt;Summary&gt;</property>
 						<property name="halign">start</property>
 						<attributes>
 							<attribute name="font-desc" value="Sans Medium 16"/>
 						</attributes>
-          </object>
-        </child>
-        <child>
-          <object class="GtkLabel" id="app_description">
-            <property name="label" translatable="yes">&lt;Description&gt;</property>
+					</object>
+				</child>
+				<child>
+					<object class="GtkLabel" id="app_description">
+						<property name="label" translatable="yes">&lt;Description&gt;</property>
 						<property name="halign">start</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox">
+					</object>
+				</child>
+				<child>
+					<object class="GtkBox">
 						<property name="spacing">32</property>
-            <property name="homogeneous">True</property>
+						<property name="homogeneous">True</property>
 						<property name="orientation">vertical</property>
-            <child>
-              <object class="GtkLabel" id="app_id">
-                <property name="label" translatable="yes">&lt;Id&gt;</property>
-								<property name="halign">start</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkLabel" id="app_license">
-                <property name="label" translatable="yes">&lt;License&gt;</property>
-								<property name="halign">start</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkLabel" id="app_origin">
-                <property name="label" translatable="yes">&lt;Origin&gt;</property>
-								<property name="halign">start</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkLabel" id="app_branch">
-                <property name="label" translatable="yes">&lt;Branch&gt;</property>
-								<property name="halign">start</property>
-              </object>
-            </child>
-          </object>
-        </child>
-      </object>
-    </child>
+						<child>
+							<object class="GtkBox">
+							<property name="homogeneous">true</property>
+								<child>
+									<object class="GtkLabel">
+										<property name="label" translatable="yes">Application ID:</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+								<child>
+									<object class="GtkLabel" id="app_id">
+										<property name="label" translatable="yes">&lt;Id&gt;</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+							</object>
+						</child>
+						<child>
+							<object class="GtkBox">
+							<property name="homogeneous">true</property>
+								<child>
+									<object class="GtkLabel">
+										<property name="label" translatable="yes">License:</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+								<child>
+									<object class="GtkLabel" id="app_license">
+										<property name="label" translatable="yes">&lt;License&gt;</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+							</object>
+						</child>
+						<child>
+							<object class="GtkBox">
+							<property name="homogeneous">true</property>
+								<child>
+									<object class="GtkLabel">
+										<property name="label" translatable="yes">Source:</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+								<child>
+									<object class="GtkLabel" id="app_origin">
+										<property name="label" translatable="yes">&lt;Origin&gt;</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+							</object>
+						</child>
+						<child>
+							<object class="GtkBox">
+							<property name="homogeneous">true</property>
+								<child>
+									<object class="GtkLabel">
+										<property name="label" translatable="yes">Branch:</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+								<child>
+									<object class="GtkLabel" id="app_branch">
+										<property name="label" translatable="yes">&lt;Branch&gt;</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+							</object>
+						</child>
+
+						<child>
+							<object class="GtkBox">
+							<property name="homogeneous">true</property>
+								<child>
+									<object class="GtkLabel">
+										<property name="label" translatable="yes">Download size:</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+								<child>
+									<object class="GtkLabel" id="app_download_size">
+										<property name="label" translatable="yes">&lt;Download Size&gt;</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+							</object>
+						</child>
+
+						<child>
+							<object class="GtkBox">
+							<property name="homogeneous">true</property>
+								<child>
+									<object class="GtkLabel">
+										<property name="label" translatable="yes">Installed size:</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+								<child>
+									<object class="GtkLabel" id="app_installed_size">
+										<property name="label" translatable="yes">&lt;Installed Size&gt;</property>
+										<property name="halign">start</property>
+									</object>
+								</child>
+							</object>
+						</child>
+					</object>
+				</child>
+			</object>
+		</child>
 	</template>
 
 	<menu id="primary_menu">

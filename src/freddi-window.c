@@ -13,6 +13,7 @@
 #include <flatpak.h>
 #include <appstream/appstream.h>
 #include <regex.h>
+#include <ctype.h>
 
 #include "freddi-config.h"
 #include "freddi-window.h"
@@ -34,6 +35,7 @@ struct _FreddiWindow
 	/* Template widgets */
 	GtkHeaderBar				*header_bar;
 	GtkButton						*install_button;
+	GtkImage						*app_icon;
 	GtkLabel						*app_name;
 	GtkLabel						*app_developer;
 	GtkLabel						*app_summary;
@@ -42,6 +44,8 @@ struct _FreddiWindow
 	GtkLabel						*app_license;
 	GtkLabel						*app_origin;
 	GtkLabel						*app_branch;
+	GtkLabel						*app_download_size;
+	GtkLabel						*app_installed_size;
 };
 
 G_DEFINE_TYPE (FreddiWindow, freddi_window, GTK_TYPE_APPLICATION_WINDOW)
@@ -54,6 +58,7 @@ freddi_window_class_init (FreddiWindowClass *klass)
 	gtk_widget_class_set_template_from_resource (widget_class, "/com/example/Freddi/freddi-window.ui");
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, header_bar);
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, install_button);
+	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_icon);
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_name);
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_developer);
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_summary);
@@ -62,6 +67,8 @@ freddi_window_class_init (FreddiWindowClass *klass)
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_license);
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_origin);
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_branch);
+	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_download_size);
+	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_installed_size);
 }
 
 static void text_viewer_window__install_app(GAction *action G_GNUC_UNUSED, GVariant *parameter G_GNUC_UNUSED, FreddiWindow *self) {
@@ -86,12 +93,10 @@ static void text_viewer_window__install_app(GAction *action G_GNUC_UNUSED, GVari
 	FlatpakRef * fpref = flatpak_ref_parse(ref, &err);
 
 	if (err != NULL) {
-		g_assert (fpref == NULL);
 		puts("Can't find the app."); // TODO put the error message in the GUI instead.
 	}
 	else {
 		// # Obtain app metadata from AppStream in order to display it to the user prettily
-		g_assert (fpref != NULL);
 		const char * refname = flatpak_ref_get_name(fpref);
 
 	}
@@ -254,7 +259,22 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 		const gchar * metadata_license = as_component_get_metadata_license (component);
 		const gchar * group = as_component_get_project_group (component);
 
+		const GPtrArray * icons = as_component_get_icons(component);
+		
+		gpointer biggest_icon = icons->pdata[0];
+		guint biggest_size = 0;
+
+		for (guint j = 0; j < icons->len; j++) {
+			guint size = as_icon_get_width(icons->pdata[j]) * as_icon_get_height(icons->pdata[j]);
+
+			if (size > biggest_size) {
+				biggest_icon = icons->pdata[j];
+				biggest_size = size;
+			}
+		}
+
 		// Display the metadata:
+		if (as_icon_get_kind(biggest_icon) == AS_ICON_KIND_CACHED) gtk_image_set_from_file(self->app_icon, as_icon_get_filename(biggest_icon));
 		if (name != NULL) gtk_label_set_label(self->app_name, name);
 		if (developer != NULL) gtk_label_set_label(self->app_developer, developer);
 		if (summary != NULL) gtk_label_set_label(self->app_summary, summary);
@@ -287,8 +307,64 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 
 		if (appData.id != NULL) gtk_label_set_label(self->app_id, appData.id);
 		if (license != NULL) gtk_label_set_label(self->app_license, license);
-		if (origin != NULL) gtk_label_set_label(self->app_origin, origin);
-		if (branch != NULL) gtk_label_set_label(self->app_branch, branch);
+		if (origin != NULL) {
+			char buffer[strlen(appData.suggestRemoteName) + 1];
+			strcpy(buffer, appData.suggestRemoteName);
+			buffer[strlen(appData.suggestRemoteName)] = 0;
+
+			for (int c = 0; buffer[c] != '\0'; c++) {
+				if (c == 0 || buffer[c - 1] == ' ') buffer[c] = toupper(buffer[c]);
+			}
+
+			gtk_label_set_label(self->app_origin, buffer);
+		}
+
+		// TODO Add more metadata from Flatpak, such as:
+		// download_size, installed_size, branch
+		GError* err = NULL;
+		char* ref = getRef(appData.type, appData.id, ARCH, appData.branch);
+		FlatpakRef * fpref = flatpak_ref_parse(ref, &err);
+
+		if (err == NULL) {
+			FlatpakInstallation* fpi = flatpak_installation_new_system(NULL, &err);
+
+			if (err == NULL) {
+				FlatpakRemoteRef * fprr = flatpak_installation_fetch_remote_ref_sync(
+					fpi, appData.suggestRemoteName, FLATPAK_REF_KIND_APP, appData.id, ARCH, appData.branch, NULL, err
+				);
+
+				if (err == NULL) {
+					guint64 download_size = flatpak_remote_ref_get_download_size(fprr);
+					guint64 installed_size = flatpak_remote_ref_get_installed_size(fprr);
+					char* fp_branch = flatpak_ref_get_branch(fpref);
+
+					if (fp_branch != NULL) gtk_label_set_label(self->app_branch, fp_branch);
+					
+					if (download_size) {
+						char buffer[100];
+						double mb = (float) download_size / (1024 * 1024);
+						sprintf(buffer, "%.2fMB", mb);
+						gtk_label_set_label(self->app_download_size, buffer);
+					}
+					
+					if (installed_size) {
+						char buffer[100];
+						double mb = (float) installed_size / (1024 * 1024);
+						sprintf(buffer, "%.2fMB", mb);
+						gtk_label_set_label(self->app_installed_size, buffer);
+					}
+				}
+				else {
+					puts("Failed to fetch remote metadata from Flatpak.\n");
+				}
+			}
+			else {
+				puts("Failed to connect to Flatpak instance.\n");
+			}
+		}
+		else {
+			puts("Application/Runtime not found.\n"); // TODO put the error message in the GUI instead.
+		}
 	}
 
 	/* Ask the window manager/compositor to present the window. */
