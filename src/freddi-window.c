@@ -1,3 +1,21 @@
+/*
+Copyright (C) 2022 Yitzchak Schwarz
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+of the License only.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
 #ifndef ARCH
 
 #if defined  ( __amd64__) || defined  (__amd64) || defined  (__x86_64__) || defined  (__x86_64)
@@ -10,15 +28,16 @@
 
 #endif
 
-#include <flatpak.h>
 #include <appstream/appstream.h>
 #include <regex.h>
 #include <ctype.h>
+#include <pthread.h>
 
 #include "freddi-config.h"
 #include "freddi-window.h"
 
 struct _appData appData;
+struct _flatpak flatpak;
 
 // This should be inlined, but I'm doing it this way to make it easier for me to read the code.
 char* getRef(char* type, char* name, char* arch, char* branch) {
@@ -71,6 +90,28 @@ freddi_window_class_init (FreddiWindowClass *klass)
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_installed_size);
 }
 
+void *install_thread() {
+	GError* err = NULL;
+	char* ref = getRef(appData.type, appData.id, ARCH, appData.branch);
+
+	flatpak.transaction = flatpak_transaction_new_for_installation(flatpak.installation, NULL, &err);
+
+	if (err == NULL) {
+		flatpak_transaction_add_install(flatpak.installation, appData.suggestRemoteName, ref, NULL, &err);
+
+		if (err == NULL) {
+			gboolean success = flatpak_transaction_run(flatpak.transaction, NULL, &err);
+
+			if (err == NULL) {
+				printf("Installation success: %s\n", (success ? "Yes" : "No"));
+			}
+			else {
+				puts("Installation failed.\n");
+			}
+		}
+	}
+}
+
 static void text_viewer_window__install_app(GAction *action G_GNUC_UNUSED, GVariant *parameter G_GNUC_UNUSED, FreddiWindow *self) {
 	// TODO install the flatpak.
 	// 1. Get the full app ref string from the file.
@@ -85,39 +126,8 @@ static void text_viewer_window__install_app(GAction *action G_GNUC_UNUSED, GVari
 		printf("No package is selected.\n");
 		return;
 	}
-	
-	GError* err = NULL;
-	char* ref = getRef(appData.type, appData.id, ARCH, appData.branch);
-	FlatpakRef * fpref = flatpak_ref_parse(ref, &err);
-
-	if (err == NULL) {
-		FlatpakInstallation* fpi = flatpak_installation_new_system(NULL, &err);
-
-		if (err == NULL) {
-			FlatpakTransaction* fpt = flatpak_transaction_new_for_installation(fpi, NULL, &err);
-
-			if (err == NULL) {
-				flatpak_transaction_add_install(fpt, appData.suggestRemoteName, ref, NULL, &err);
-
-				if (err == NULL) {
-					gboolean success = flatpak_transaction_run(fpt, NULL, &err);
-
-					if (err == NULL) {
-						printf("Installation success: %s\n", (success ? "Yes" : "No"));
-					}
-					else {
-						puts("Failed to install\n");
-					}
-				}
-			}
-		}
-		else {
-			puts("Failed to connect to Flatpak instance.\n");
-		}
-	}
-	else {
-		puts("Application/Runtime not found.\n"); // TODO put the error message in the GUI instead.
-	}
+	pthread_t installation;
+	pthread_create(&installation, NULL, &install_thread, NULL);
 }
 
 static void
@@ -339,20 +349,20 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 
 		GError* err = NULL;
 		char* ref = getRef(appData.type, appData.id, ARCH, appData.branch);
-		FlatpakRef * fpref = flatpak_ref_parse(ref, &err);
+		flatpak.ref = flatpak_ref_parse(ref, &err);
 
 		if (err == NULL) {
-			FlatpakInstallation* fpi = flatpak_installation_new_system(NULL, &err);
+			flatpak.installation = flatpak_installation_new_system(NULL, &err);
 
 			if (err == NULL) {
-				FlatpakRemoteRef * fprr = flatpak_installation_fetch_remote_ref_sync(
-					fpi, appData.suggestRemoteName, FLATPAK_REF_KIND_APP, appData.id, ARCH, appData.branch, NULL, err
+				flatpak.remote_ref = flatpak_installation_fetch_remote_ref_sync(
+					flatpak.installation, appData.suggestRemoteName, FLATPAK_REF_KIND_APP, appData.id, ARCH, appData.branch, NULL, err
 				);
 
 				if (err == NULL) {
-					guint64 download_size = flatpak_remote_ref_get_download_size(fprr);
-					guint64 installed_size = flatpak_remote_ref_get_installed_size(fprr);
-					char* fp_branch = flatpak_ref_get_branch(fpref);
+					guint64 download_size = flatpak_remote_ref_get_download_size(flatpak.remote_ref);
+					guint64 installed_size = flatpak_remote_ref_get_installed_size(flatpak.remote_ref);
+					char* fp_branch = flatpak_ref_get_branch(flatpak.ref);
 
 					if (fp_branch != NULL) gtk_label_set_label(self->app_branch, fp_branch);
 					

@@ -4,6 +4,7 @@
 		"freddi-window.h": "c",
 		"packagekit.h": "c",
 		"as-version.h": "c",
-		"flatpak.h": "c"
+		"flatpak.h": "c",
+		"appstream.h": "c"
 	}
 }
