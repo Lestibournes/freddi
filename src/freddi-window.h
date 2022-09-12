@@ -57,4 +57,7 @@ struct _flatpak {
 	FlatpakInstalledRef * installed_ref;
 };
 
+// Installing the app:
+static void freddi_window__install_app(GAction *action G_GNUC_UNUSED, GVariant *parameter G_GNUC_UNUSED, FreddiWindow *self);
+
 G_END_DECLS

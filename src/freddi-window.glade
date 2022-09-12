@@ -45,10 +45,13 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
+                    <property name="valign">end</property>
                     <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
                     <property name="label" translatable="yes">&lt;Name&gt;</property>
                     <attributes>
                       <attribute name="font-desc" value="Sans Bold 18"/>
+                      <attribute name="gravity" value="south"/>
                     </attributes>
                   </object>
                   <packing>
@@ -62,6 +65,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
+                    <property name="valign">start</property>
                     <property name="label" translatable="yes">&lt;Developer&gt;</property>
                     <attributes>
                       <attribute name="weight" value="light"/>

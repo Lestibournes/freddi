@@ -63,11 +63,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 				<property name="margin-bottom">32</property>
 
 				<child>
-					<object class="GtkBox">
+					<object class="GtkBox" id="header_box">
 					<property name="spacing">32</property>
 						<child>
 							<object class="GtkImage" id="app_icon">
-								<property name="icon-name">missing-image</property>
 								<property name="pixel_size">128</property>
 							</object>
 						</child>
@@ -77,8 +76,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 								<property name="spacing">32</property>
 								<child>
 									<object class="GtkLabel" id="app_name">
-										<property name="label" translatable="yes">&lt;Name&gt;</property>
 										<property name="halign">start</property>
+										<property name="valign">end</property>
+										<property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
 										<attributes>
 											<attribute name="font-desc" value="Sans Bold 18"/>
 										</attributes>
@@ -86,8 +87,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 								</child>
 								<child>
 									<object class="GtkLabel" id="app_developer">
-										<property name="label" translatable="yes">&lt;Developer&gt;</property>
 										<property name="halign">start</property>
+										<property name="valign">start</property>
+										<property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
 										<attributes>
 											<attribute name="font-desc" value="Sans Light 10"/>
 										</attributes>
@@ -99,7 +102,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 				</child>
 				<child>
 					<object class="GtkLabel" id="app_summary">
-						<property name="label" translatable="yes">&lt;Summary&gt;</property>
 						<property name="halign">start</property>
 						<attributes>
 							<attribute name="font-desc" value="Sans Medium 16"/>
@@ -108,7 +110,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 				</child>
 				<child>
 					<object class="GtkLabel" id="app_description">
-						<property name="label" translatable="yes">&lt;Description&gt;</property>
 						<property name="halign">start</property>
 					</object>
 				</child>
@@ -128,14 +129,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 								</child>
 								<child>
 									<object class="GtkLabel" id="app_id">
-										<property name="label" translatable="yes">&lt;Id&gt;</property>
 										<property name="halign">start</property>
 									</object>
 								</child>
 							</object>
 						</child>
 						<child>
-							<object class="GtkBox">
+							<object class="GtkBox" id="app_license_box">
 							<property name="homogeneous">true</property>
 								<child>
 									<object class="GtkLabel">
@@ -145,7 +145,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 								</child>
 								<child>
 									<object class="GtkLabel" id="app_license">
-										<property name="label" translatable="yes">&lt;License&gt;</property>
 										<property name="halign">start</property>
 									</object>
 								</child>
@@ -162,7 +161,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 								</child>
 								<child>
 									<object class="GtkLabel" id="app_origin">
-										<property name="label" translatable="yes">&lt;Origin&gt;</property>
 										<property name="halign">start</property>
 									</object>
 								</child>
@@ -179,7 +177,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 								</child>
 								<child>
 									<object class="GtkLabel" id="app_branch">
-										<property name="label" translatable="yes">&lt;Branch&gt;</property>
 										<property name="halign">start</property>
 									</object>
 								</child>
@@ -197,7 +194,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 								</child>
 								<child>
 									<object class="GtkLabel" id="app_download_size">
-										<property name="label" translatable="yes">&lt;Download Size&gt;</property>
 										<property name="halign">start</property>
 									</object>
 								</child>
@@ -215,7 +211,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 								</child>
 								<child>
 									<object class="GtkLabel" id="app_installed_size">
-										<property name="label" translatable="yes">&lt;Installed Size&gt;</property>
 										<property name="halign">start</property>
 									</object>
 								</child>
