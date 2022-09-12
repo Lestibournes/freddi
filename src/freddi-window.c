@@ -40,11 +40,11 @@ struct _appData appData;
 struct _flatpak flatpak;
 
 // This should be inlined, but I'm doing it this way to make it easier for me to read the code.
-char* getRef(char* type, char* name, char* arch, char* branch) {
-	int length = strlen(type) + strlen(name) + strlen(arch) + strlen(branch);
-	char* ref = malloc(sizeof(char) * length + 1);
-	sprintf(ref, "%s/%s/%s/%s", type, name, arch, branch);
-	return ref;
+// Also, standardization.
+gchar* getRef(gchar* type, gchar* name, gchar* arch, gchar* branch) {
+	GString* s = g_string_new("");
+	g_string_printf(s, "%s/%s/%s/%s", type, name, arch, branch);
+	return s->str;
 }
 
 struct _FreddiWindow
@@ -54,6 +54,7 @@ struct _FreddiWindow
 	/* Template widgets */
 	GtkHeaderBar				*header_bar;
 	GtkButton						*install_button;
+	GtkProgressBar			*progress_bar;
 	GtkImage						*app_icon;
 	GtkLabel						*app_name;
 	GtkLabel						*app_developer;
@@ -75,8 +76,10 @@ freddi_window_class_init (FreddiWindowClass *klass)
 	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
 	gtk_widget_class_set_template_from_resource (widget_class, "/com/example/Freddi/freddi-window.ui");
+	
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, header_bar);
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, install_button);
+	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, progress_bar);
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_icon);
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_name);
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_developer);
@@ -90,44 +93,82 @@ freddi_window_class_init (FreddiWindowClass *klass)
 	gtk_widget_class_bind_template_child (widget_class, FreddiWindow, app_installed_size);
 }
 
-void *install_thread() {
-	GError* err = NULL;
-	char* ref = getRef(appData.type, appData.id, ARCH, appData.branch);
+static void flatpak_transaction_run_callback(GTask *task, FlatpakTransaction *transaction, FreddiWindow *window, GCancellable *cancellable) {
+	/* Handle cancellation. */
+	if (g_task_return_error_if_cancelled(task)) return;
 
-	flatpak.transaction = flatpak_transaction_new_for_installation(flatpak.installation, NULL, &err);
+
+	/* Run the blocking function. */
+	GError* err = NULL;
+	gboolean success = flatpak_transaction_run(flatpak.transaction, cancellable, &err);
 
 	if (err == NULL) {
-		flatpak_transaction_add_install(flatpak.installation, appData.suggestRemoteName, ref, NULL, &err);
-
-		if (err == NULL) {
-			gboolean success = flatpak_transaction_run(flatpak.transaction, NULL, &err);
-
-			if (err == NULL) {
-				printf("Installation success: %s\n", (success ? "Yes" : "No"));
-			}
-			else {
-				puts("Installation failed.\n");
-			}
-		}
+		printf("Installation success: %s\n", (success ? "Yes" : "No"));
 	}
+	else {
+		puts("Installation failed.\n");
+	}
+
+	g_task_return_int(task, success ? 1 : 0);
 }
 
-static void text_viewer_window__install_app(GAction *action G_GNUC_UNUSED, GVariant *parameter G_GNUC_UNUSED, FreddiWindow *self) {
-	// TODO install the flatpak.
-	// 1. Get the full app ref string from the file.
-	// 2. Get a FlatpakRef object by using flatpak_ref_parse() (Is this necessary?).
-	// 3. Get a FlatpakTransaction object by using flatpak_transaction_new_for_installation().
-	// 4. Add an install to the transation using either flatpak_transaction_add_install_flatpakref() or flatpak_transaction_add_install().
-	// 5. Execute the installation with flatpak_transaction_run().
-	// This is a blocking function, so either it should be placed in a worker thread, or use an alternative async function.
-	// 6. Monitor and display the progress using a FlatpakTransactionOperation object, which is obtained from a signal.
-	// The question is, how to register the listener?
+void flatpak_transaction_run_async(FlatpakTransaction *transaction, GCancellable *cancellable, GAsyncReadyCallback callback, FreddiWindow *window) {
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	GTask *task = g_task_new(NULL, cancellable, callback, window);
+  g_task_set_source_tag (task, flatpak_transaction_run_async);
+
+	g_task_set_return_on_cancel(task, FALSE);
+
+	g_task_set_task_data(task, transaction, NULL);
+
+	g_task_run_in_thread(task, callback);
+
+	g_object_unref (task);
+}
+
+gboolean flatpak_transaction_run_finish(GAsyncResult *result, GError **error) {
+	printf("FINISHED!!!\n");
+}
+
+void freddi_window__install_change(FlatpakTransactionProgress *transaction_progress, FreddiWindow* self) {
+	char * status = flatpak_transaction_progress_get_status(transaction_progress);
+	int progress = flatpak_transaction_progress_get_progress(transaction_progress);
+	double fraction = ((double) progress) / 100.0;
+	
+	gtk_widget_set_visible(self->progress_bar, true);
+	gtk_progress_bar_set_fraction(self->progress_bar, fraction);
+}
+
+void freddi_window__install_start (FlatpakTransaction *object, FlatpakTransactionOperation *operation, FlatpakTransactionProgress *progress, FreddiWindow* self) {
+	g_signal_connect(progress, "changed", G_CALLBACK (freddi_window__install_change), self);
+}
+
+static void freddi_window__install_app(GAction *action G_GNUC_UNUSED, GVariant *parameter G_GNUC_UNUSED, FreddiWindow *self) {
+	gtk_widget_set_sensitive(self->install_button, false);
+	gtk_button_set_label(self->install_button, "Installing...");
+
 	if (appData.id == NULL)	{
 		printf("No package is selected.\n");
 		return;
 	}
-	pthread_t installation;
-	pthread_create(&installation, NULL, &install_thread, NULL);
+
+	GError* err = NULL;
+	GCancellable* cancellable = g_cancellable_new();
+	char* ref = getRef(appData.type, appData.id, ARCH, appData.branch);
+
+	flatpak.transaction = flatpak_transaction_new_for_installation(flatpak.installation, NULL, &err);
+	
+	if (err == NULL) {
+		flatpak_transaction_add_install(flatpak.transaction, appData.suggestRemoteName, ref, NULL, &err);
+		
+		if (err == NULL) {
+			g_signal_connect(flatpak.transaction, "new-operation", G_CALLBACK (freddi_window__install_start), self);
+			flatpak_transaction_run_async(flatpak.transaction, cancellable, flatpak_transaction_run_callback, self);
+		}
+	}
+	else {
+		printf("Creating a transaction failed.");
+	}
 }
 
 static void
@@ -140,11 +181,13 @@ freddi_window_init (FreddiWindow *self)
 
 	g_signal_connect(install_action,
 										"activate",
-										G_CALLBACK (text_viewer_window__install_app),
+										G_CALLBACK (freddi_window__install_app),
 										self);
 
 	g_action_map_add_action (G_ACTION_MAP (self),
 													 G_ACTION(install_action));
+
+	gtk_widget_set_sensitive(self->install_button, false);
 }
 
 
@@ -346,8 +389,11 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 
 			gtk_label_set_label(self->app_origin, buffer);
 		}
+		if (appData.branch != NULL) gtk_label_set_label(self->app_branch, appData.branch);
 
+		GCancellable* cancellable = g_cancellable_new();
 		GError* err = NULL;
+
 		char* ref = getRef(appData.type, appData.id, ARCH, appData.branch);
 		flatpak.ref = flatpak_ref_parse(ref, &err);
 
@@ -355,33 +401,43 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 			flatpak.installation = flatpak_installation_new_system(NULL, &err);
 
 			if (err == NULL) {
+				flatpak.installed_ref = flatpak_installation_get_installed_ref(flatpak.installation, FLATPAK_REF_KIND_APP, appData.id, ARCH, appData.branch, cancellable, &err);
+
+				if (flatpak.installed_ref == NULL) gtk_widget_set_sensitive(self->install_button, true);
+
+				err = NULL;
 				flatpak.remote_ref = flatpak_installation_fetch_remote_ref_sync(
-					flatpak.installation, appData.suggestRemoteName, FLATPAK_REF_KIND_APP, appData.id, ARCH, appData.branch, NULL, err
+					flatpak.installation,
+					appData.suggestRemoteName,
+					FLATPAK_REF_KIND_APP,
+					appData.id,
+					ARCH,
+					appData.branch,
+					cancellable,
+					&err
 				);
 
 				if (err == NULL) {
 					guint64 download_size = flatpak_remote_ref_get_download_size(flatpak.remote_ref);
 					guint64 installed_size = flatpak_remote_ref_get_installed_size(flatpak.remote_ref);
-					char* fp_branch = flatpak_ref_get_branch(flatpak.ref);
-
-					if (fp_branch != NULL) gtk_label_set_label(self->app_branch, fp_branch);
 					
 					if (download_size) {
 						char buffer[100];
 						double mb = (float) download_size / (1024 * 1024);
-						sprintf(buffer, "%.2fMB", mb);
+						sprintf(buffer, "%.2fMiB", mb);
 						gtk_label_set_label(self->app_download_size, buffer);
 					}
 					
 					if (installed_size) {
 						char buffer[100];
 						double mb = (float) installed_size / (1024 * 1024);
-						sprintf(buffer, "%.2fMB", mb);
+						sprintf(buffer, "%.2fMiB", mb);
 						gtk_label_set_label(self->app_installed_size, buffer);
 					}
 				}
 				else {
 					puts("Failed to fetch remote metadata from Flatpak.\n");
+					printf("%s\n", err->message);
 				}
 			}
 			else {

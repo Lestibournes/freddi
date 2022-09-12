@@ -17,7 +17,7 @@ This is a work in progress, and individual commits might be broken.
 
 ## Authors
 
-This project is made by Yitzchak Schwarz
+This project is made by Yitzchak Schwarz.
 
 ## License
 

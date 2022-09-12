@@ -54,6 +54,7 @@ struct _flatpak {
 	FlatpakTransaction * transaction;
 	FlatpakRef * ref;
 	FlatpakRemoteRef * remote_ref;
+	FlatpakInstalledRef * installed_ref;
 };
 
 G_END_DECLS

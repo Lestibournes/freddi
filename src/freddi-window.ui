@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 Copyright (C) 2022 Yitzchak Schwarz
 
@@ -15,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -->
-<?xml version="1.0" encoding="UTF-8"?>
 <interface>
 	<requires lib="gtk" version="4.0"/>
 	<template class="FreddiWindow" parent="GtkApplicationWindow">
@@ -34,10 +34,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 					</object>
 				</child>
 				<child type="end">
-					<object class="GtkButton" id="install_button">
-						<property name="label">Install</property>
-						<property name="sensitive">false</property>
-						<property name="action-name">win.install</property>
+					<object class="GtkBox">
+						<property name="orientation">vertical</property>
+						<child>
+							<object class="GtkButton" id="install_button">
+								<property name="label">Install</property>
+								<property name="action-name">win.install</property>
+							</object>
+						</child>
+						<child>
+              <object class="GtkProgressBar" id="progress_bar">
+                <property name="visible">false</property>
+                <property name="can-focus">false</property>
+                <property name="fraction">0.0</property>
+              </object>
+            </child>
 					</object>
 				</child>
 			</object>
@@ -104,7 +115,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 				<child>
 					<object class="GtkBox">
 						<property name="spacing">32</property>
-						<property name="homogeneous">True</property>
+						<property name="homogeneous">true</property>
 						<property name="orientation">vertical</property>
 						<child>
 							<object class="GtkBox">
