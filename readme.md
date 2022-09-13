@@ -1,5 +1,5 @@
 # About Freddi
-A simple utility for installing flatpaks from a .flatpakref file.
+A simple utility for installing and removing flatpaks from a .flatpakref file.
 
 Current state as of 11/09/2022:
 
@@ -8,12 +8,16 @@ Current state as of 11/09/2022:
 Currently implemented:
 * Displaying app metadata
 * Installing applications
-
-Doesn't work:
 * Showing installation progress
 * Showing that an app is already installed
+* Removing apps
 
-This is a work in progress, and individual commits might be broken.
+Currently not implemented:
+* Showing uninstall progress
+* Cancelling ongoing operations
+* Packaging as Flatpak (might be unfixable)
+
+This is a work in progress, and individual commits might be broken. The app might be unstable.
 
 ## Authors
 
@@ -22,3 +26,7 @@ This project is made by Yitzchak Schwarz.
 ## License
 
 This project is licensed under GPL-2.0 only.
+
+## Contributing
+
+I would welcome help and advice about developing gnome applications (particularly in C), using AppStream and libflatpak, and packaging as a Flatpak. I also need an icon.
