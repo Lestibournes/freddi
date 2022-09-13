@@ -47,14 +47,16 @@ struct _appData {
   char* type;
 
 	// AppStream data:
+	gpointer icon;
+	char* name;
+	char* developer;
+	char* summary;
+	char* description;
+	char* license;
 };
 
 struct _flatpak {
-	FlatpakInstallation * installation;
-	FlatpakTransaction * transaction;
-	FlatpakRef * ref;
-	FlatpakRemoteRef * remote_ref;
-	FlatpakInstalledRef * installed_ref;
+	FlatpakInstallation *installation;
 };
 
 // Installing the app:
