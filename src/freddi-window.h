@@ -46,13 +46,13 @@ struct _appData {
   bool app;
   char* type;
 
-	// AppStream data:
-	gpointer icon;
-	char* name;
-	char* developer;
-	char* summary;
-	char* description;
-	char* license;
+	// // AppStream data:
+	// gpointer icon;
+	// char* name;
+	// char* developer;
+	// char* summary;
+	// char* description;
+	// char* license;
 };
 
 struct _flatpak {

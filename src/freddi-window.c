@@ -181,6 +181,78 @@ void setState(FreddiWindow *self, STATE state) {
 		gtk_widget_set_visible(self->progress_bar, true);
 	}
 }
+// Loading Flatpak data:
+
+static void flatpak_load_data(GTask *task, gpointer source_object, FreddiWindow *window, GCancellable *cancellable) {
+	int retval;
+
+	/* Handle cancellation. */
+	if (g_task_return_error_if_cancelled(task)) return;
+
+	/* Run the blocking function. */
+	GError *err = NULL;
+	
+	FlatpakRemoteRef *remote_ref = flatpak_installation_fetch_remote_ref_sync(
+		flatpak.installation,
+		appData.suggestRemoteName,
+		kind,
+		appData.id,
+		ARCH,
+		appData.branch,
+		cancellable,
+		&err
+	);
+
+	if (err == NULL) {
+		guint64 download_size = flatpak_remote_ref_get_download_size(remote_ref);
+		guint64 installed_size = flatpak_remote_ref_get_installed_size(remote_ref);
+		
+		if (download_size) {
+			char buffer[100];
+			double MiB = (float) download_size / (1024 * 1024);
+			sprintf(buffer, "%.2fMiB", MiB);
+			gtk_label_set_label(window->app_download_size, buffer);
+		}
+		
+		if (installed_size) {
+			char buffer[100];
+			double MiB = (float) installed_size / (1024 * 1024);
+			sprintf(buffer, "%.2fMiB", MiB);
+			gtk_label_set_label(window->app_installed_size, buffer);
+		}
+
+		retval = true;
+	}
+	else {
+		puts("Failed to fetch remote metadata from Flatpak.\n");
+		printf("%s\n", err->message);
+		retval = false;
+	}
+
+	g_task_return_int(task, retval);
+}
+
+void flatpak_load_data_async(FreddiWindow *window, GCancellable *cancellable, GAsyncReadyCallback callback, gpointer user_data) {
+	GTask *task = NULL;  /* owned */
+
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+
+	task = g_task_new(NULL, cancellable, callback, user_data);
+	g_task_set_source_tag(task, flatpak_load_data_async);
+
+	/* Cancellation should be handled manually using mechanisms specific to
+	 * some_blocking_function(). */
+	g_task_set_return_on_cancel(task, FALSE);
+
+	g_task_set_task_data(task, window, NULL);
+
+	/* Run the task in a worker thread and return immediately while that continues
+	 * in the background. When it’s done it will call @callback in the current
+	 * thread default main context. */
+	g_task_run_in_thread (task, flatpak_load_data);
+
+	g_object_unref (task);
+}
 
 // Installing the app:
 static void flatpak_transaction_run_thread(GTask *task, char *transaction, FreddiWindow *window, GCancellable *cancellable) {
@@ -361,22 +433,22 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 	// Display data from the .flatpakref file:
 
 	if (appData.suggestRemoteName != NULL) {
-			char buffer[strlen(appData.suggestRemoteName) + 1];
-			strcpy(buffer, appData.suggestRemoteName);
-			buffer[strlen(appData.suggestRemoteName)] = 0;
+		char buffer[strlen(appData.suggestRemoteName) + 1];
+		strcpy(buffer, appData.suggestRemoteName);
+		buffer[strlen(appData.suggestRemoteName)] = 0;
 
-			for (int c = 0; buffer[c] != '\0'; c++) {
-				if (c == 0 || buffer[c - 1] == ' ') buffer[c] = toupper(buffer[c]);
-			}
-
-			gtk_label_set_label(self->app_origin, buffer);
+		for (int c = 0; buffer[c] != '\0'; c++) {
+			if (c == 0 || buffer[c - 1] == ' ') buffer[c] = toupper(buffer[c]);
 		}
+
+		gtk_label_set_label(self->app_origin, buffer);
+	}
 
 	if (appData.id != NULL) gtk_label_set_label(self->app_id, appData.id);
 	if (appData.branch != NULL) gtk_label_set_label(self->app_branch, appData.branch);
 	
 	// Load Flatpak metadata:
-
+	
 	GCancellable* cancellable = g_cancellable_new();
 	GError* err = NULL;
 
@@ -395,46 +467,15 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 		else setState(self, INSTALLED);
 
 		err = NULL;
-		FlatpakRemoteRef *remote_ref = flatpak_installation_fetch_remote_ref_sync(
-			flatpak.installation,
-			appData.suggestRemoteName,
-			kind,
-			appData.id,
-			ARCH,
-			appData.branch,
-			cancellable,
-			&err
-		);
-
-		if (err == NULL) {
-			guint64 download_size = flatpak_remote_ref_get_download_size(remote_ref);
-			guint64 installed_size = flatpak_remote_ref_get_installed_size(remote_ref);
-			
-			if (download_size) {
-				char buffer[100];
-				double MiB = (float) download_size / (1024 * 1024);
-				sprintf(buffer, "%.2fMiB", MiB);
-				gtk_label_set_label(self->app_download_size, buffer);
-			}
-			
-			if (installed_size) {
-				char buffer[100];
-				double MiB = (float) installed_size / (1024 * 1024);
-				sprintf(buffer, "%.2fMiB", MiB);
-				gtk_label_set_label(self->app_installed_size, buffer);
-			}
-		}
-		else {
-			puts("Failed to fetch remote metadata from Flatpak.\n");
-			printf("%s\n", err->message);
-		}
+		flatpak_load_data_async(self, NULL, NULL, NULL);
 	}
 	else {
 		puts("Failed to connect to Flatpak instance.\n");
 	}
 
 	// Load AppStream metadata:
-	
+	// TODO do this on a seperate thread.
+
 	AsPool * pool = as_pool_new();
 	as_pool_set_flags(pool, AS_POOL_FLAG_LOAD_FLATPAK);
 	as_pool_load(pool, NULL, NULL);

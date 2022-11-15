@@ -7,13 +7,14 @@
                 "/usr/include/**",
                 "/usr/lib/x86_64-linux-gnu/**",
                 "/usr/include/appstream",
-								"/usr/include/flatpak"
+                "/usr/include/flatpak"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
             "cppStandard": "c++14",
-            "intelliSenseMode": "linux-clang-x64"
+            "intelliSenseMode": "linux-clang-x64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
         }
     ],
     "version": 4
