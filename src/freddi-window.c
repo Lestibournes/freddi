@@ -526,26 +526,82 @@ void open_file_complete (GObject *source_object, GAsyncResult *result, FreddiWin
 			if (summary != NULL) gtk_label_set_label(self->app_summary, summary);
 			
 			if (description != NULL) {
+				// Convert HTML tags to regular string values:
 				char* cursor = description;
-				char* start;
-				char* end;
 				char buffer[strlen(description + 1)];
-				int offset = 0;
-				int length;
+				memset(buffer, '\0', strlen(description) + 1);
 
-				while((start = strstr(cursor, "<p>")) != NULL) {
-					end = strstr(cursor, "</p>");
-					length = end - start - 3;
+				// Supported tags:
+				char* opening_p = "<p>";
+				char* closing_p = "</p>";
+				char* opening_ul = "<ul>";
+				char* closing_ul = "</ul>";
+				char* opening_li = "<li>";
+				char* closing_li = "</li>";
+/*
+Iterate over description. If the current character isn't part of a tag, add it to the buffer. If it is part of a tag, skip it.
 
-					memcpy(buffer + offset, start + 3, length);
-					cursor = end + 4;
-					offset += length;
-					buffer[offset] = 0;
-					strcat(buffer, "\n\n");
-					offset += 2;
+So for example, if whe have the text:
+<p>hello</p>
+<ul><li>you</li><li>are</li></ul>
+<p>an idiot!</p>
+
+Then the following steps will occur:
+1. Detect <p> at i = 0
+2. Skip to i = 3
+3. Copy all characters one by one until i = 8.
+4. Detect </p> at i = 9
+5. Skip to i = 10
+6. Copy the character at i = 10
+7. Detect <ul> at i = 11
+8. Skip to i = 15
+9. Detect <il> at i = 15
+10. Skip to i = 19
+11. Copy all characters one by one until i = 22
+etc.
+*/
+				int index = 0; //The next position in which to write to the buffer.
+				char* tag; //The tag that was found.
+				// int len; //The length of the tag that was found.
+
+				for (int i = 0; i < strlen(description); i++) {
+					cursor = description + i;
+
+					if (strncmp(cursor, opening_p, strlen(opening_p)) == 0) {
+						tag = opening_p;
+					}
+					else if (strncmp(cursor, closing_p, strlen(closing_p)) == 0) {
+						tag = closing_p;
+						buffer[index] = '\n';
+						index++;
+					}
+					else if (strncmp(cursor, opening_ul, strlen(opening_ul)) == 0) {
+						tag = opening_ul;
+					}
+					else if (strncmp(cursor, closing_ul, strlen(closing_ul)) == 0) {
+						tag = closing_ul;
+					}
+					else if (strncmp(cursor, opening_li, strlen(opening_li)) == 0) {
+						tag = opening_li;
+						strcat(buffer + index, "\t* ");
+						index += 3;
+					}
+					else if (strncmp(cursor, closing_li, strlen(closing_li)) == 0) {
+						tag = closing_li;
+						buffer[index] = '\n';
+						index++;
+					}
+					else {
+						tag = NULL;
+						buffer[index] = description[i];
+						index++;
+					}
+
+					
+					if (tag != NULL) {
+						i += strlen(tag) - 1;
+					}
 				}
-
-				buffer[offset] = 0;
 
 				gtk_label_set_label(self->app_description, buffer);
 				gtk_label_set_wrap(self->app_description, true);

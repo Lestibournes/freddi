@@ -194,6 +194,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 								</child>
 								<child>
 									<object class="GtkLabel" id="app_download_size">
+										<property name="label" translatable="no">...</property>
 										<property name="halign">start</property>
 									</object>
 								</child>
@@ -211,6 +212,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 								</child>
 								<child>
 									<object class="GtkLabel" id="app_installed_size">
+										<property name="label" translatable="no">...</property>
 										<property name="halign">start</property>
 									</object>
 								</child>
